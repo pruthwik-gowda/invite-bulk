@@ -85,8 +85,13 @@ function App() {
       textWidth = helveticaFont.widthOfTextAtSize(name, fontSize);
     }
 
-    // Position: x starts at 42% of width, y at 75.5% from bottom
-    const x = startX;
+    // Calculate center position: center of available space, then subtract half text width
+    const centerPoint = startX + availableWidth / 2;
+    let x = centerPoint - textWidth / 2;
+
+    // Ensure text stays within bounds (in case of rounding issues)
+    x = Math.max(startX, Math.min(x, endX - textWidth));
+
     const y = height * 0.755;
 
     firstPage.drawText(name, {
