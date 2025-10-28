@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
 import { PDFDocument, rgb } from "pdf-lib";
+import * as fontkit from "fontkit";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import "./App.css";
@@ -62,7 +63,12 @@ function App() {
   };
 
   const addTextToPDF = async (pdfBytes, name) => {
+    // Load the PDF document first
     const pdfDoc = await PDFDocument.load(pdfBytes);
+
+    // Register fontkit on the DOCUMENT INSTANCE (not the class)
+    pdfDoc.registerFontkit(fontkit);
+
     const pages = pdfDoc.getPages();
     const firstPage = pages[0];
     const { width, height } = firstPage.getSize();
@@ -72,17 +78,31 @@ function App() {
     const endX = width * 0.75;
     const availableWidth = endX - startX;
 
-    // Load Helvetica font for accurate text width measurement
-    const helveticaFont = await pdfDoc.embedFont("Helvetica");
+    // Load Magnolia Script font from TTF file
+    let font;
+    try {
+      // Use absolute path - works in both dev and production
+      const fontUrl = `${window.location.origin}/fonts/MagnoliaScript.ttf`;
+      const fontResponse = await fetch(fontUrl);
+      if (!fontResponse.ok) {
+        throw new Error(`Font file not found: ${fontResponse.status}`);
+      }
+      const fontBytes = await fontResponse.arrayBuffer();
+      font = await pdfDoc.embedFont(fontBytes);
+    } catch (error) {
+      // Fallback to Helvetica if custom font not found
+      console.warn("Magnolia Script not found, using Helvetica", error);
+      font = await pdfDoc.embedFont("Helvetica");
+    }
 
     // Start with default font size
     let fontSize = 13;
-    let textWidth = helveticaFont.widthOfTextAtSize(name, fontSize);
+    let textWidth = font.widthOfTextAtSize(name, fontSize);
 
     // Reduce font size if text doesn't fit
     while (textWidth > availableWidth && fontSize > 4) {
       fontSize -= 0.5;
-      textWidth = helveticaFont.widthOfTextAtSize(name, fontSize);
+      textWidth = font.widthOfTextAtSize(name, fontSize);
     }
 
     // Calculate center position: center of available space, then subtract half text width
@@ -99,7 +119,7 @@ function App() {
       y: y,
       size: fontSize,
       color: rgb(0, 0, 0),
-      font: helveticaFont,
+      font: font,
     });
 
     return await pdfDoc.save();
