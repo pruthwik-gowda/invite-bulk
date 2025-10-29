@@ -78,20 +78,13 @@ function App() {
     const endX = width * 0.73;
     const availableWidth = endX - startX;
 
-    // Load Magnolia Script font from TTF file
+    // Load Times New Roman Italic
     let font;
     try {
-      // Use absolute path - works in both dev and production
-      const fontUrl = `${window.location.origin}/fonts/MagnoliaScript.ttf`;
-      const fontResponse = await fetch(fontUrl);
-      if (!fontResponse.ok) {
-        throw new Error(`Font file not found: ${fontResponse.status}`);
-      }
-      const fontBytes = await fontResponse.arrayBuffer();
-      font = await pdfDoc.embedFont(fontBytes);
+      font = await pdfDoc.embedFont("Times-Italic");
     } catch (error) {
-      // Fallback to Helvetica if custom font not found
-      console.warn("Magnolia Script not found, using Helvetica", error);
+      // Fallback to Helvetica if Times-Italic fails
+      console.warn("Times-Italic not available, using Helvetica", error);
       font = await pdfDoc.embedFont("Helvetica");
     }
 
