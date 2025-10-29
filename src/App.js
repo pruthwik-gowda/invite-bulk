@@ -75,7 +75,7 @@ function App() {
 
     // Calculate available width for the name (from 42% to 72% of page width)
     const startX = width * 0.42;
-    const endX = width * 0.75;
+    const endX = width * 0.73;
     const availableWidth = endX - startX;
 
     // Load Magnolia Script font from TTF file
